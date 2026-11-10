@@ -3,6 +3,13 @@
 Each section is a version of the mod, the `version` in `mod.json`. The release workflow copies the
 section of a tagged version into the release notes.
 
+## 1.1.0
+
+- The Yes/No questions and the notices are the loader's `rq.ui.confirm` and `rq.ui.notice`
+  (loader 2.19.0) instead of the game's dialog functions by name. They look the same, and an item
+  name with `@` in it no longer breaks the line.
+- For agents: `rq.ui.get` gives the question's text in `select.message`.
+
 ## 1.0.0
 
 First version.

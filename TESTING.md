@@ -17,7 +17,8 @@ All are kit widgets, listed by `rqmod-ctl ui` with `"section": "kit"`.
 | `row-morurun-pick-N` | The page's right list, after SWAP | The worn special item first, then the vault's; a locked one is `enabled` false |
 
 - **The game's question.** REMOVE, and a click on a picker row, ask with the game's Yes/No: the
-  screen becomes `select`, with `yes` and `no`. The page stays under it.
+  screen becomes `select`, with `yes` and `no`, and `select.message` holds the question. The page
+  stays under it.
 - **Config.** The Mods tab has the page **Morurun Items** with one checkbox, **Destroy Item on
   Removal/Change?**.
 - **Covered controls.** The button covers no game control. The page covers the whole status page

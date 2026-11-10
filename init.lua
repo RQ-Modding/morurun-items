@@ -124,12 +124,13 @@ end
 
 -- ---- The questions ----
 
+-- The game's Yes / No and OK (rq.ui.confirm and rq.ui.notice, loader 2.19.0).
 local function ask(text)
-  return call("選択_確認", text, 1, "Yes", "No", -1, -1, false) == true
+  return rq.ui.confirm(text) == true
 end
 
 local function notice(text)
-  call("選択_通知", text, "OK", false)
+  rq.ui.notice(text)
 end
 
 -- ---- Doing it ----
@@ -144,11 +145,11 @@ local function change(iic, slot, ii)
   if ii then
     local y = ui.item_data(ii)
     y = y and y.name or "?"
-    text = "Switch absorbed item (" .. x .. ") with (" .. y .. ")?@"
+    text = "Switch absorbed item (" .. x .. ") with (" .. y .. ")?\n"
       .. (destroy and (x .. " will be destroyed.") or (x .. " goes back to the vault."))
   else
     text = destroy and ("Destroy absorbed item (" .. x .. ")?")
-      or ("Remove absorbed item (" .. x .. ")?@It goes back to the vault.")
+      or ("Remove absorbed item (" .. x .. ")?\nIt goes back to the vault.")
   end
   if not ask(text) then return false end
   if not destroy then
