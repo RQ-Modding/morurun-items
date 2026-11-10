@@ -3,14 +3,14 @@
 -- without quest 13 (Alice's Mansion). The game's rule by default: the item taken out is destroyed.
 -- API reference: https://rq-modding.github.io/rq-modding-docs/reference/
 --
--- It works on the game's own data through rq.ain (notes/plans/plan-morurun-items.md in the
--- workspace). The game keeps the absorbed items in five slots, Ｃ[iic].ＦＡ[17] to ＦＡ[21], as item
--- numbers; Ｃ体内特殊アイテムの効果計算 adds their stats on every recalculation.
+-- The game keeps the absorbed items in five slots, Ｃ[iic].ＦＡ[17] to ＦＡ[21], as item numbers;
+-- Ｃ体内特殊アイテムの効果計算 adds their stats on every recalculation (notes/plans/plan-morurun-items.md
+-- in the workspace). The button is one of the status page's own (rq.gamebutton "status"), and the
+-- page is read and drawn again with rq.statuspage (loader 2.20.0).
 
 local MOD = "Morurun Items"
 local ui = rq.uikit
 local call = rq.ain.call
-local hook = rq.ain.hook
 
 local SLOTS = { 17, 18, 19, 20, 21 }
 local SPECIAL = 21
@@ -51,25 +51,11 @@ local function any(list)
   return false
 end
 
--- Row data for an item number, which has no instance once absorbed: the game's own way
--- (Ｉ固有名前 makes a temporary instance and deletes it). Kept per number.
-local rows_by_no = {}
+-- Row data for an item number, which has no instance once absorbed (rq.item.info, 2.20.0).
 local function row_of(no)
-  local r = rows_by_no[no]
-  if r then return r end
-  local ii = call("Ｉ生成", no, 0)
-  local d = ii and ii > 0 and ui.item_data(ii) or nil
-  if ii and ii > 0 then call("Ｉ削除", ii) end
-  r = { name = d and d.name or ("Item " .. no), info = d and d.info or "", icon = d and d.icon,
-        rank = d and d.rank or 0, kind = SPECIAL, level = "" }
-  rows_by_no[no] = r
-  return r
-end
-
--- The character on the status page (T_StatusCard::getCharaNo).
-local function status_chara()
-  local ok, iic = pcall(rq.ain.global, "g_sStatus", "m_sCard", "m_sEquipSkill", "m_sList", "m_nCharaNo")
-  if ok and math.type(iic) == "integer" and iic > 0 then return iic end
+  local d = rq.item.info(no)
+  return { name = d and d.name or ("Item " .. no), info = d and d.info or "", icon = d and d.icon,
+    rank = d and d.rank or 0, kind = SPECIAL, level = "" }
 end
 
 local function in_quest()
@@ -99,27 +85,6 @@ local function candidates(iic)
     end
   end
   return out
-end
-
--- ---- The status page's card ----
-
--- The card is drawn once (T_StatusCard::set). T_Status::scroll sets it again when the character
--- changes: scroll to the same character with the old one read as another, once, and without the
--- window sound that scroll plays.
-local function refresh_card(iic)
-  local idx = call("ステータス_キャラ一覧_インデクス", iic)
-  if math.type(idx) ~= "integer" or idx < 0 then return false end
-  local first, quiet = true, true
-  local r1 = hook("T_StatusCard@getCharaNo", { before = function(h)
-    if first then first = false; h.skip = true; h.result = 999999 end
-  end })
-  local r2 = hook("効果音_窓開き", { before = function(h)
-    if quiet then quiet = false; h.skip = true end
-  end })
-  local ok, err = pcall(call, "scrollStatus", idx)
-  r1(); r2()
-  if not ok then rq.log(MOD .. ": refresh failed: " .. tostring(err)) end
-  return ok
 end
 
 -- ---- The questions ----
@@ -167,7 +132,7 @@ local function change(iic, slot, ii)
   end
   call("ＣＦＡ", iic, SLOTS[slot], new)
   rq.chara.recalc(iic, not in_quest())
-  refresh_card(iic)
+  rq.statuspage.refresh()
   call("効果音_アイテム装備", new)
   rq.log(string.format("%s: chara %d slot %d: %d -> %d%s", MOD, iic, slot, old, new,
     destroy and "" or " (old one to the vault)"))
@@ -176,37 +141,8 @@ end
 
 -- ---- The button and the page ----
 
-local theme = ui.copy_theme(ui.themes.hub)
-theme.styles = theme.styles or {}
-theme.styles.button = theme.styles.button or {}
-theme.styles.button.morurun = { normal = { cg = ICON }, hover = { cg = ICON }, w = 32, h = 29, cover = true }
-
-local depth = 0       -- inside ステータス_実行
-local screen_at, on_status, close_at = -1, false, nil
 local page = nil      -- { iic, slot, picking, rows, pending }
 local busy = false    -- the game's question is up (its loop runs our updates inside the call)
-
-hook("ステータス_実行", {
-  before = function() depth = depth + 1 end,
-  after = function() depth = math.max(0, depth - 1); if depth == 0 then page = nil end end,
-})
-
--- The status page's screen and its X, read a few times a second.
-local function status_shown()
-  local now = rq.time_ms()
-  if now - screen_at >= 150 then
-    screen_at = now
-    local s = rq.ui.get()
-    on_status = s ~= nil and s.screen == "status"
-    close_at = nil
-    if on_status then
-      for _, c in ipairs(s.controls or {}) do
-        if c.id == "close" then close_at = c; break end
-      end
-    end
-  end
-  return on_status
-end
 
 local function names_of(list)
   local out = {}
@@ -216,26 +152,27 @@ local function names_of(list)
   return table.concat(out, "\n")
 end
 
-local function draw_button(iic)
-  local list = slots(iic)
-  local quest = in_quest()
-  local has = any(list)
-  local tip
-  if not has then
-    tip = { header = MOD, text = "Nothing absorbed by the Morurun." }
-  elseif quest then
-    tip = { header = MOD, text = names_of(list), sub = "Not during a quest." }
-  else
-    tip = { header = MOD, text = names_of(list) }
-  end
-  local x = close_at and (close_at.x - 38) or 472
-  local y = close_at and (close_at.y - 4) or 61
-  local was = ui.theme
-  ui.use(theme)
-  local clicked = ui.button("", { style = "morurun", x = x, y = y, id = "morurun", disabled = not has or quest, tip = tip })
-  ui.use(was)
-  if clicked then page = { iic = iic, slot = nil, picking = false } end
-end
+-- The button: the game's own, in the status page's title row (rq.gamebutton "status").
+local button = rq.gamebutton.add({
+  group = "status",
+  id = "open",
+  label = MOD,
+  icon = ICON,
+  enabled = function(iic) return iic ~= nil and any(slots(iic)) and not in_quest() end,
+  tip = function(iic)
+    local list = slots(iic)
+    if not any(list) then return "Nothing absorbed by the Morurun." end
+    if in_quest() then return names_of(list) .. "\nNot during a quest." end
+    return names_of(list)
+  end,
+  on_click = function()
+    local iic = rq.statuspage.chara()
+    if iic then page = { iic = iic, slot = nil, picking = false } end
+  end,
+})
+
+rq.statuspage.on_close(function() page = nil end)
+rq.statuspage.on_chara(function() page = nil end)
 
 local function slot_rows(iic)
   local out = {}
@@ -291,7 +228,7 @@ local function draw_page()
 end
 
 rq.on_frame(function()
-  if depth == 0 then return end
+  if page and not rq.statuspage.chara() then page = nil end
   if page then
     draw_page()
     -- Out of the page's layout: the game's question runs its own loop, which draws the page again.
@@ -305,11 +242,7 @@ rq.on_frame(function()
       if not ok then rq.log(MOD .. ": " .. tostring(err)) end
       p.picking = false
     end
-    return
   end
-  if not status_shown() then return end
-  local iic = status_chara()
-  if iic then draw_button(iic) end
 end)
 
 rq.log(MOD .. " loaded")
@@ -319,4 +252,5 @@ return {
   destroy_on = destroy_on,
   set_destroy = function(on) rq.store.global.set("destroy", on ~= false) end,
   page = function() return page end,
+  button = button,
 }

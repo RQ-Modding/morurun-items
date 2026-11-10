@@ -6,11 +6,12 @@ Assume nothing about the mod when it is not installed: check `logs\rqmod.log` fo
 
 ## What it adds
 
-All are kit widgets, listed by `rqmod-ctl ui` with `"section": "kit"`.
+The button is one of the status page's own (`rq.gamebutton`'s `"status"` group, section
+`agent`); the page and its widgets are kit widgets (section `kit`).
 
 | id | where | what |
 | --- | --- | --- |
-| `button-morurun` | Status page, left of the X (472, 61 when the X is at 510, 65), 32 by 29 | Opens the page. `enabled` false when the character has nothing absorbed, or during a quest |
+| `morurun-items.open` | Status page, left of the X (472, 61), 32 by 29 | Opens the page. `enabled` false when the character has nothing absorbed, or during a quest; its tip (the game's comment window) says why |
 | `page-morurun-items` | Over the town, 0, 56, 1024 by 680 | The page; Esc, a right click or its X closes it |
 | `row-morurun-slots-1` .. `-5` | The page's left list, 4 shown | The absorbed slots; an empty slot is `enabled` false |
 | `button-morurun-swap`, `button-morurun-remove` | Under the slots | `enabled` only with a filled slot chosen |
@@ -21,16 +22,16 @@ All are kit widgets, listed by `rqmod-ctl ui` with `"section": "kit"`.
   stays under it.
 - **Config.** The Mods tab has the page **Morurun Items** with one checkbox, **Destroy Item on
   Removal/Change?**.
-- **Covered controls.** The button covers no game control. The page covers the whole status page
+- **Covered controls.** The page covers the whole status page
   while it is open, so `press` refuses the game's controls then (`"covered": true`).
-- **Keys.** The page takes the arrow keys and Enter; the status page's own keys do not reach the
-  button.
+- **Keys.** The status page's keys reach the button: Up from the Special slot, then Enter. The
+  page takes the arrow keys and Enter while it is open.
 
 ## How to check it
 
 1. Open a character's status page (Party → a unit's status). Pick one with absorbed items; Rance has
    some in most saves (`rq.ain.call("ＣＦＡ", iic, 17..21, -1)` reads the five slots, 0 is empty).
-2. `button-morurun` is enabled, and its tip lists the items. On a character with five empty slots it
+2. `morurun-items.open` is enabled, and its tip lists the items. On a character with five empty slots it
    is `enabled` false.
 3. Press it, press a filled `row-morurun-slots-N`, press `button-morurun-remove`, answer `yes`. The
    slot reads 0, and the page's `status.stats` match the game's (`Ｃ攻撃力` and the others): the card
@@ -40,13 +41,14 @@ All are kit widgets, listed by `rqmod-ctl ui` with `"section": "kit"`.
 
 ## Forcing it for a test
 
-- `rq.mod.get("morurun-items")` returns `destroy_on()`, `set_destroy(on)` (the Config setting) and
-  `page()` (the open page's state: `iic`, `slot`, `picking`, `rows` of the picker). Put the setting
+- `rq.mod.get("morurun-items")` returns `destroy_on()`, `set_destroy(on)` (the Config setting),
+  `page()` (the open page's state: `iic`, `slot`, `picking`, `rows` of the picker) and `button`
+  (the `rq.gamebutton` handle; `button.set({ shown = false })` frees its cell for another test). Put the setting
   back after the test.
 - `rq.item.give(274)` puts Solid Gold Bear (attack +100) in the vault; `rq.item.give(276, { to = iic })`
   makes a character wear one.
 - `scrollStatus(ステータス_キャラ一覧_インデクス(iic))` through `rq.ain.call` shows a character on an
-  open status page.
+  open status page; `rq.statuspage.chara()` says which one shows.
 
 ## Test Lab
 
