@@ -3,7 +3,7 @@
   "id": "morurun-items",
   "name": "Morurun Items",
   "author": "Moru Zerinho6",
-  "version": "1.2.0",
-  "loader": "2.20.0",
+  "version": "1.2.1",
+  "loader": "2.23.0",
   "priority": 0
 }

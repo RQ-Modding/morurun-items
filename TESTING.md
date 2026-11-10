@@ -30,7 +30,7 @@ The button is one of the status page's own (`rq.gamebutton`'s `"status"` group, 
 ## How to check it
 
 1. Open a character's status page (Party → a unit's status). Pick one with absorbed items; Rance has
-   some in most saves (`rq.ain.call("ＣＦＡ", iic, 17..21, -1)` reads the five slots, 0 is empty).
+   some in most saves (`rq.chara.absorbed(iic)` reads the five slots, 0 is empty).
 2. `morurun-items.open` is enabled, and its tip lists the items. On a character with five empty slots it
    is `enabled` false.
 3. Press it, press a filled `row-morurun-slots-N`, press `button-morurun-remove`, answer `yes`. The
@@ -57,5 +57,5 @@ the page's rows, REMOVE with No and Yes, SWAP with a vault item and with the wor
 rules (no Forbidden Talent, locked greyed), the card after each change, and the setting unchecked.
 Shots: `morurun-button.png`, `morurun-page.png`, `morurun-ask.png`, `morurun-pick.png`.
 
-Not checked by the Lab: the button during a quest (greyed by `クエスト_攻略中`), and a full vault when
+Not checked by the Lab: the button during a quest (greyed while `rq.quests.current()` is not 0), and a full vault when
 the setting is unchecked (the game's notice "The vault cannot take ...").

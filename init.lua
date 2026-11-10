@@ -6,13 +6,12 @@
 -- The game keeps the absorbed items in five slots, Ｃ[iic].ＦＡ[17] to ＦＡ[21], as item numbers;
 -- Ｃ体内特殊アイテムの効果計算 adds their stats on every recalculation (notes/plans/plan-morurun-items.md
 -- in the workspace). The button is one of the status page's own (rq.gamebutton "status"), and the
--- page is read and drawn again with rq.statuspage (loader 2.20.0).
+-- page is read and drawn again with rq.statuspage (loader 2.20.0). The slots are read and written
+-- with rq.chara.absorbed and set_absorbed (loader 2.23.0).
 
 local MOD = "Morurun Items"
 local ui = rq.uikit
-local call = rq.ain.call
 
-local SLOTS = { 17, 18, 19, 20, 21 }
 local SPECIAL = 21
 -- Special items the game never absorbs (Ｃ体内特殊アイテムの取得処理).
 local NEVER = { [304] = true, [305] = true, [306] = true, [307] = true, [309] = true, [310] = true }
@@ -41,9 +40,7 @@ end
 -- ---- The game's data ----
 
 local function slots(iic)
-  local out = {}
-  for i, n in ipairs(SLOTS) do out[i] = call("ＣＦＡ", iic, n, -1) end
-  return out
+  return rq.chara.absorbed(iic)
 end
 
 local function any(list)
@@ -59,7 +56,7 @@ local function row_of(no)
 end
 
 local function in_quest()
-  return call("クエスト_攻略中") == true
+  return rq.quests.current() ~= 0
 end
 
 -- Special items the character could take in: in the vault (kind 21, not one the game never
@@ -67,7 +64,7 @@ end
 local function candidates(iic)
   local out = {}
   local worn = (rq.item.equipped(iic) or {}).special
-  if worn and not NEVER[call("Ｉ固有番号", worn, -1)] then
+  if worn and not NEVER[rq.item.number(worn)] then
     local d = ui.item_data(worn)
     if d then
       d.level = "Worn now"
@@ -76,7 +73,7 @@ local function candidates(iic)
   end
   for _, it in ipairs(rq.items()) do
     local ii = it.id
-    if it.typeId == SPECIAL and call("アイテム_存在", ii) == VAULT and not NEVER[call("Ｉ固有番号", ii, -1)] then
+    if it.typeId == SPECIAL and it.place == VAULT and not NEVER[it.no] then
       local d = ui.item_data(ii)
       if d then
         if d.locked then d.disabled = true end
@@ -127,13 +124,12 @@ local function change(iic, slot, ii)
   end
   local new = 0
   if ii then
-    new = call("Ｉ固有番号", ii, -1)
+    new = rq.item.number(ii)
     rq.item.remove(ii) -- taken off first when worn, as quest 13 does
   end
-  call("ＣＦＡ", iic, SLOTS[slot], new)
-  rq.chara.recalc(iic, not in_quest())
+  rq.chara.set_absorbed(iic, slot, new) -- recalculates, and heals outside a quest
   rq.statuspage.refresh()
-  call("効果音_アイテム装備", new)
+  rq.sound.play(new > 0 and 5003 or 5004) -- the game's equip and unequip sounds
   rq.log(string.format("%s: chara %d slot %d: %d -> %d%s", MOD, iic, slot, old, new,
     destroy and "" or " (old one to the vault)"))
   return true
@@ -189,7 +185,7 @@ end
 
 local function draw_page()
   local p = page
-  local name = call("Ｃ名前", p.iic, "")
+  local name = (rq.chara.get(p.iic) or {}).name or ""
   local open = ui.page({ id = "morurun-items", title = MOD .. ": " .. name, x = 0, y = 56, w = 1024, h = 680 },
     function(x, y)
       local rows = slot_rows(p.iic)

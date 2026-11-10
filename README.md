@@ -36,7 +36,7 @@ Tested with every mod in the workspace installed. It touches no other mod's data
 
 ## Install
 
-Needs [RQ MOD](https://github.com/RQ-Modding/RQ-Mod) with loader **2.13.0** or newer. Extract the
+Needs [RQ MOD](https://github.com/RQ-Modding/RQ-Mod) with loader **2.23.0** or newer. Extract the
 release zip into the game's `mods` folder, so that you have `mods/morurun-items/mod.json`.
 
 ## License

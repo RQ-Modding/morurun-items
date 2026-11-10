@@ -3,6 +3,13 @@
 Each section is a version of the mod, the `version` in `mod.json`. The release workflow copies the
 section of a tagged version into the release notes.
 
+## 1.2.1
+
+- Reads and writes the five slots with the loader's `rq.chara.absorbed` and `set_absorbed`, finds
+  the vault's special items by the rows' `no` and `place`, and plays the equip sound with
+  `rq.sound.play`, instead of the game's code by name. Nothing changes for players.
+- Needs loader 2.23.0.
+
 ## 1.2.0
 
 - The MORU RUN button is one of the status page's own buttons (`rq.gamebutton`'s `"status"` group,
