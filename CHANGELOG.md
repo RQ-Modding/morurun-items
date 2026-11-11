@@ -3,6 +3,18 @@
 Each section is a version of the mod, the `version` in `mod.json`. The release workflow copies the
 section of a tagged version into the release notes.
 
+## 1.3.0
+
+- **ABSORB**, with the new setting **Allow Absorbing into an Empty Slot?** (unchecked by default, as
+  the game does): an empty slot that a Morurun opened takes a special item from the vault, or the
+  one worn, with the game's Yes/No first. Each Morurun opens one slot, up to five, so a character
+  with three Moruruns fills only up to three; the others show "Not open yet". Athena never has one.
+- The button opens for a character with an open slot and nothing absorbed, while the setting is on.
+- SWAP no longer offers a worn special item the game will not take off (Athena's): it is greyed.
+- When the game has no room for an item going back to the vault (3000 items in all), the notice
+  says so.
+- For agents: `fill_on`, `set_fill`, `open_slots` and `tip` in `rq.mod.get("morurun-items")`.
+
 ## 1.2.1
 
 - Reads and writes the five slots with the loader's `rq.chara.absorbed` and `set_absorbed`, finds
