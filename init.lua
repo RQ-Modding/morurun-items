@@ -25,31 +25,28 @@ local ICON = 11158 -- The "MORU RUN" mark of the Rance Castle tab, 32 by 29.
 
 -- ---- Settings ----
 
+-- Kept in rq.store.global under "destroy" and "fill", as before 1.3.1, so players keep theirs.
+local settings = rq.config.settings({
+  id = "morurun-items",
+  title = MOD,
+  rows = {
+    { kind = "checkbox", key = "destroy", label = "Destroy Item on Removal/Change?", default = true,
+      note = { "Checked, as the game does: an item taken out of a character is destroyed.",
+        "Unchecked: it goes back to the vault." } },
+    { kind = "space", h = 12 },
+    -- Off by default, as in the game: only a Morurun puts an item in a slot.
+    { kind = "checkbox", key = "fill", label = "Allow Absorbing into an Empty Slot?", default = false,
+      note = { "Each Morurun opens one slot, up to five. Checked: an open slot left empty",
+        "takes a special item from the vault. Unchecked, as the game does: only a Morurun." } },
+  },
+})
+
 local function destroy_on()
-  return rq.store.global.get("destroy", true) ~= false
+  return settings.get("destroy")
 end
 
--- Off by default, as in the game: only a Morurun puts an item in a slot.
 local function fill_on()
-  return rq.store.global.get("fill", false) == true
-end
-
-if rq.config then
-  rq.config.page({
-    id = "morurun-items",
-    title = MOD,
-    draw = function(kit, box)
-      local v, changed = kit.checkbox(destroy_on(), "Destroy Item on Removal/Change?", { id = "destroy" })
-      if changed then rq.store.global.set("destroy", v) end
-      kit.label("Checked, as the game does: an item taken out of a character is destroyed.", { dim = true })
-      kit.label("Unchecked: it goes back to the vault.", { dim = true })
-      kit.space(0, 12)
-      local f, fchanged = kit.checkbox(fill_on(), "Allow Absorbing into an Empty Slot?", { id = "fill" })
-      if fchanged then rq.store.global.set("fill", f) end
-      kit.label("Each Morurun opens one slot, up to five. Checked: an open slot left empty", { dim = true })
-      kit.label("takes a special item from the vault. Unchecked, as the game does: only a Morurun.", { dim = true })
-    end,
-  })
+  return settings.get("fill")
 end
 
 -- ---- The game's data ----
@@ -335,9 +332,9 @@ rq.log(MOD .. " loaded")
 -- button's tip and the page's state.
 return {
   destroy_on = destroy_on,
-  set_destroy = function(on) rq.store.global.set("destroy", on ~= false) end,
+  set_destroy = function(on) settings.set("destroy", on ~= false) end,
   fill_on = fill_on,
-  set_fill = function(on) rq.store.global.set("fill", on == true) end,
+  set_fill = function(on) settings.set("fill", on == true) end,
   open_slots = open_slots,
   tip = tip_of,
   page = function() return page end,

@@ -33,6 +33,7 @@ open.
   Morurun puts an item in a slot. Checked: an open slot left empty takes a special item with
   ABSORB, the button opens for a character with an open slot and nothing absorbed, and a slot that
   no Morurun opened shows "Not open yet".
+- **Reset** on that page puts both back to their defaults.
 - Both settings hold for every save profile.
 - The button and the page work with the mouse. The arrow keys reach the button (Up from the Special
   slot, then Enter), and the page takes the arrow keys and Enter.
@@ -48,7 +49,7 @@ Tested with every mod in the workspace installed. It touches no other mod's data
 
 ## Install
 
-Needs [RQ MOD](https://github.com/RQ-Modding/RQ-Mod) with loader **2.23.0** or newer. Extract the
+Needs [RQ MOD](https://github.com/RQ-Modding/RQ-Mod) with loader **2.35.0** or newer. Extract the
 release zip into the game's `mods` folder, so that you have `mods/morurun-items/mod.json`.
 
 ## License

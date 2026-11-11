@@ -21,8 +21,9 @@ The button is one of the status page's own (`rq.gamebutton`'s `"status"` group, 
   screen becomes `select`, with `yes` and `no`, and `select.message` holds the question. The page
   stays under it.
 - **Config.** The Mods tab has the page **Morurun Items** with two checkboxes, **Destroy Item on
-  Removal/Change?** (checked by default) and **Allow Absorbing into an Empty Slot?** (unchecked by
-  default).
+  Removal/Change?** (`destroy`, checked by default) and **Allow Absorbing into an Empty Slot?**
+  (`fill`, unchecked by default), and **Reset** (`reset`), which puts both back. The page is
+  `rq.config.settings`'s; the values stay in `rq.store.global` under `destroy` and `fill`.
 - **Open slots.** A character has `min(5, rebirths)` slots open (`rq.chara.get(iic).rebirths`, the
   Moruruns it had). While the absorbed items are fewer, the first empty slots up to that count can
   be filled. Athena 2.0 never levels, so she has none.

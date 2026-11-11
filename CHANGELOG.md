@@ -3,6 +3,11 @@
 Each section is a version of the mod, the `version` in `mod.json`. The release workflow copies the
 section of a tagged version into the release notes.
 
+## 1.3.1
+
+- The Config page is built with the loader's `rq.config.settings` (loader 2.35.0): the same two
+  checkboxes and texts, kept under the same keys, so your settings stay, and a **Reset** button.
+
 ## 1.3.0
 
 - **ABSORB**, with the new setting **Allow Absorbing into an Empty Slot?** (unchecked by default, as
