@@ -3,6 +3,21 @@
 Each section is a version of the mod, the `version` in `mod.json`. The release workflow copies the
 section of a tagged version into the release notes.
 
+## 1.4.0
+
+- The page is laid out as the game's storage screen: the slots on the storage's panel at the
+  left, and the vault's special items on the vault's panel at the right, always shown, with the
+  vault's rank buttons, Locked / Unlocked, the count and SORT (`rq.uikit.item_picker`'s `type`,
+  `only` and `first`, loader 2.44.0). Under the slots a bar holds SWAP / ABSORB, REMOVE and the
+  notes, as Config's bottom bar does.
+- An item is marked with a click and goes in with SWAP / ABSORB, with a double click, or dragged
+  onto a slot; a slot dragged onto the vault's list is REMOVE.
+- A locked item is listed with its lock, as in the vault, and SWAP on it says to unlock it in the
+  vault first (it was greyed).
+- For agents: the right list's rows are `row-morurun-pick-list-N` (were `row-morurun-pick-N`,
+  shown after SWAP); `page()` has `mark` (the marked item) in place of `picking` and `rows`.
+- Needs loader 2.44.0.
+
 ## 1.3.1
 
 - The Config page is built with the loader's `rq.config.settings` (loader 2.35.0): the same two

@@ -13,6 +13,12 @@
 -- Each Morurun (Ｃレベルドレイン) adds one to the character's count (rebirths) and absorbs the worn
 -- special item into the first empty slot, so a character has opened one slot per Morurun, five at
 -- most. Athena 2.0 never levels, so she never has one (notes/plans/plan-morurun-camera.md 2.4).
+--
+-- 1.4.0 (loader 2.44.0): the page is laid out as the game's storage screen: the slots on the left
+-- on the storage's panel (CG 11403), the vault's special items on the right on the vault's panel
+-- (CG 11401) with its rank buttons, Locked / Unlocked and SORT (rq.uikit.item_picker's type, only
+-- and first), and a footer bar under the slots with SWAP, REMOVE and the notes. An item goes in by
+-- SWAP, by a double click, or dragged onto a slot; a slot dragged onto the vault's list is REMOVE.
 
 local MOD = "Morurun Items"
 local ui = rq.uikit
@@ -20,7 +26,6 @@ local ui = rq.uikit
 local SPECIAL = 21
 -- Special items the game never absorbs (Ｃ体内特殊アイテムの取得処理).
 local NEVER = { [304] = true, [305] = true, [306] = true, [307] = true, [309] = true, [310] = true }
-local VAULT = 7
 local ICON = 11158 -- The "MORU RUN" mark of the Rance Castle tab, 32 by 29.
 
 -- ---- Settings ----
@@ -100,35 +105,30 @@ local function can_fill(iic)
   return n > 0
 end
 
--- Special items the character could take in: in the vault (kind 21, not one the game never
--- absorbs), and the one the character wears, as quest 13 swaps with it. A worn one the game will
--- not take off (Athena's 302) is greyed.
-local function candidates(iic)
-  local out = {}
+-- Special items the character could take in: the vault's (the picker lists them, kind 21, less the
+-- ones the game never absorbs), and the one the character wears, first, as quest 13 swaps with it.
+-- A worn one the game will not take off (Athena's 302) is greyed.
+local function absorbable(ii)
+  return not NEVER[rq.item.number(ii)]
+end
+
+local function worn_rows(iic)
   local worn = (rq.item.equipped(iic) or {}).special
-  if worn and not NEVER[rq.item.number(worn)] then
-    local d = ui.item_data(worn)
-    if d then
-      d.level = "Worn now"
-      local info = rq.item.get(worn)
-      if info and info.locked ~= 0 then
-        d.level = "Worn; cannot be removed"
-        d.disabled = true
-      end
-      out[#out + 1] = d
-    end
+  if not worn or NEVER[rq.item.number(worn)] then return {} end
+  local d = ui.item_data(worn)
+  if not d then return {} end
+  d.level = "Worn now"
+  local info = rq.item.get(worn)
+  if info and info.locked ~= 0 then
+    d.level = "Worn; cannot be removed"
+    d.disabled = true
   end
-  for _, it in ipairs(rq.items()) do
-    local ii = it.id
-    if it.typeId == SPECIAL and it.place == VAULT and not NEVER[it.no] then
-      local d = ui.item_data(ii)
-      if d then
-        if d.locked then d.disabled = true end
-        out[#out + 1] = d
-      end
-    end
-  end
-  return out
+  return { d }
+end
+
+local function locked(ii)
+  local d = ui.item_data(ii)
+  return d and d.locked and true or false
 end
 
 -- ---- The questions ----
@@ -150,6 +150,11 @@ local function change(iic, slot, ii)
   local old = slots(iic)[slot]
   if old == 0 and not (ii and fill_on() and open_slots(iic)[slot]) then return false end
   local x = old ~= 0 and row_of(old).name or nil
+  if ii and locked(ii) then
+    local d = ui.item_data(ii)
+    notice((d and d.name or "This item") .. " is locked.\nUnlock it in the vault first.")
+    return false
+  end
   local destroy = destroy_on()
   local text
   if ii then
@@ -191,7 +196,7 @@ end
 
 -- ---- The button and the page ----
 
-local page = nil      -- { iic, slot, picking, rows, pending }
+local page = nil      -- { iic, slot, mark, pending, last_pick, last_t }
 local busy = false    -- the game's question is up (its loop runs our updates inside the call)
 
 local function names_of(list)
@@ -234,7 +239,7 @@ local button = rq.gamebutton.add({
   tip = tip_of,
   on_click = function()
     local iic = rq.statuspage.chara()
-    if iic then page = { iic = iic, slot = nil, picking = false } end
+    if iic then page = { iic = iic, slot = nil } end
   end,
 })
 
@@ -264,47 +269,139 @@ local function slot_rows(iic)
   return out
 end
 
+-- The page: the game's storage screen (T_StoreItem) with the slots in the storage's place.
+local LEFT_X, RIGHT_X = 101, 538          -- the two lists, 437 apart as in the game
+local FOOT_Y = 5 * 128                    -- the footer bar where the storage's 6th row is
+local GOLD = { 255, 230, 160 }
+local DOUBLE_MS = 450
+
+local function panels()
+  -- Opaque: the panels' grey sides let the status page show through.
+  rq.hud.rect(0, 0, 1024, 768, 0, 0, 0, 255)
+  -- The storage's panel (grey sides, its scroll track) and the vault's (rows, column, boxes).
+  rq.hud.cg(0, 0, 11403)
+  -- The storage panel's own close mark (505 to 530) is not this page's: the gap up to the vault's
+  -- panel gets the panel's plain grey side.
+  rq.hud.rect(505, 0, 27, 768, 0, 0, 0, 255)
+  rq.hud.cg(505, 0, 11403, { src = { 0, 0, 27, 768 } })
+  rq.hud.cg(1024 - 492, 0, 11401)
+  -- The vault's empty stock box.
+  rq.hud.cg(1024 - 492 + 412, 80, 11401, { src = { 412, 590, 80, 40 } })
+end
+
+-- The style ui.label draws in at that size, for measuring.
+local function label_style(size)
+  local st = {}
+  for k, v in pairs(ui.theme.label) do st[k] = v end
+  st.size = size
+  return st
+end
+
+-- Word wrap at w pixels, as ui.label will draw the lines.
+local function wrap_lines(text, size, w)
+  local st, lines, line = label_style(size), {}, nil
+  for word in text:gmatch("%S+") do
+    local try = line and (line .. " " .. word) or word
+    if line and rq.hud.text_width(try, st) > w then
+      lines[#lines + 1] = line
+      line = word
+    else
+      line = try
+    end
+  end
+  lines[#lines + 1] = line
+  return lines
+end
+
+local HINT = "Double-click an item, or drag it onto a slot. A slot dragged onto the vault is REMOVE."
+local hint_lines -- wrapped on the first draw
+
+local function footer(p, slot, row, empty, filled)
+  local x, y, w, h = LEFT_X - 5, FOOT_Y + 2, 412, 768 - FOOT_Y - 2
+  -- The vault column's plain grey, framed, with the rows' yellow line over it.
+  ui.draw({ cg = 11401, src = { 412, 600, 80, 160 }, edge = { 3, 3, 3, 3 } }, x, y, w, h)
+  rq.hud.rect(x, y - 2, w, 2, 214, 216, 70, 255)
+  -- Two columns over the notes' line: the title and the buttons on the left, the hint on the right.
+  local hint_x = x + 228
+  local title_w = hint_x - 8 - (x + 12)
+  local name = (rq.chara.get(p.iic) or {}).name or ""
+  local title, tsize = MOD .. ": " .. name, 20
+  for _, try in ipairs({ { title, 20 }, { title, 17 }, { name, 20 }, { name, 17 } }) do
+    title, tsize = try[1], try[2]
+    if rq.hud.text_width(title, label_style(tsize)) <= title_w then break end
+  end
+  ui.label(title, { x = x + 12, y = y + 8 + (20 - tsize) // 2, size = tsize, color = GOLD })
+  local marked = p.mark
+  local why_not = not (filled or empty) and "Pick a slot on the left first."
+    or not marked and "Mark a special item on the right first."
+  if ui.button(empty and "ABSORB" or "SWAP", { style = "short", x = x + 12, y = y + 40, id = "morurun-swap",
+      disabled = why_not and true or false,
+      tip = why_not or (empty and "Absorb the item marked on the right into this open slot."
+        or "Put the item marked on the right in this slot.") }) and not busy then
+    p.pending = { slot = slot, ii = marked }
+  end
+  if ui.button("REMOVE", { style = "short", x = x + 120, y = y + 40, id = "morurun-remove", disabled = not filled,
+      tip = "Take this item out of the character." }) and not busy then
+    p.pending = { slot = slot }
+  end
+  -- The hint in the grey beside the title and the buttons, wrapped inside the frame (3 px).
+  hint_lines = hint_lines or wrap_lines(HINT, 14, x + w - 12 - hint_x)
+  for i, line in ipairs(hint_lines) do
+    ui.label(line, { x = hint_x, y = y + 8 + (i - 1) * 17, size = 14, dim = true })
+  end
+  ui.label(destroy_on() and "Items taken out are destroyed (Config, Mods tab)."
+    or "Items taken out go back to the vault (Config, Mods tab).",
+    { x = x + 12, y = y + 96, size = 14, dim = true })
+end
+
 local function draw_page()
   local p = page
-  local name = (rq.chara.get(p.iic) or {}).name or ""
-  local open = ui.page({ id = "morurun-items", title = MOD .. ": " .. name, x = 0, y = 56, w = 1024, h = 680 },
-    function(x, y)
-      local rows = slot_rows(p.iic)
-      local slot, changed = ui.item_list(rows, p.slot, { x = x, y = y, shown = 4, id = "morurun-slots", style = "equip" })
-      p.slot = slot
-      if changed then p.picking = false end
-      local row = slot and rows[slot]
-      local empty = row and row.open == true -- an open slot to fill
-      local filled = row and not row.disabled and not empty
-      local by = y + 4 * 128 + 8
-      if ui.button(empty and "ABSORB" or "SWAP", { style = "short", x = x, y = by, id = "morurun-swap",
-          disabled = not (filled or empty),
-          tip = empty and "Absorb a special item from the vault into this open slot."
-            or "Put a special item from the vault in this slot." }) then
-        p.picking = true
-        p.rows = candidates(p.iic)
+  local open = ui.page({ id = "morurun-items", x = 0, y = 0, w = 1024, h = 768, pad = 6 }, function()
+    panels()
+    local rows = slot_rows(p.iic)
+    local slot, changed = ui.item_list(rows, p.slot, { x = LEFT_X, y = 0, shown = 5, id = "morurun-slots",
+      style = "equip", drag = "morurun" })
+    p.slot = slot
+    local row = slot and rows[slot]
+    local empty = row and row.open == true -- an open slot to fill
+    local filled = row and not row.disabled and not empty
+    -- The vault's special items, laid out as the vault, the worn one first.
+    local picked, cur = ui.item_picker({ x = RIGHT_X, y = 0, id = "morurun-pick", type = SPECIAL,
+      only = absorbable, first = worn_rows(p.iic), drag = "morurun" })
+    p.mark = cur
+    if picked and not busy then
+      -- A second click on the same row soon after is a double click: that item into the slot.
+      local now = rq.time_ms()
+      if p.last_pick == picked and now - (p.last_t or 0) <= DOUBLE_MS and (filled or empty) then
+        p.pending = { slot = slot, ii = picked }
+        p.last_pick = nil
+      else
+        p.last_pick, p.last_t = picked, now
       end
-      if ui.button("REMOVE", { style = "short", x = x + 108, y = by, id = "morurun-remove", disabled = not filled,
-          tip = "Take this item out of the character." }) and not busy then
-        p.pending = { slot = slot }
-      end
-      ui.label(destroy_on() and "Items taken out are destroyed (Config, Mods tab)."
-        or "Items taken out go back to the vault (Config, Mods tab).",
-        { x = x, y = by + 36, size = 15, dim = true })
-      if p.picking and (filled or empty) then
-        ui.label("Special items in the vault", { x = x + 500, y = y - 2, size = 17 })
-        if #p.rows == 0 then
-          ui.label("None that the Morurun can absorb.", { x = x + 500, y = y + 30, size = 15, dim = true })
-        else
-          local pick, _, _, _, chosen = ui.item_list(p.rows, nil, { x = x + 500, y = y + 24, shown = 4,
-            id = "morurun-pick", style = "equip" })
-          if chosen and pick and not busy then
-            local row = p.rows[pick]
-            if row and not row.disabled then p.pending = { slot = slot, ii = row.ii } end
-          end
+    end
+    -- Dragged: an item onto a slot, or a slot onto the vault's list.
+    local drow, from, to, index, at = ui.item_dropped("morurun")
+    if drow ~= nil and not busy then
+      local ii = type(drow) == "table" and (drow.ii or drow.id) or drow
+      if from == "morurun-pick-list" and to == "morurun-slots" and at then
+        local target = rows[at]
+        if target and not target.disabled then
+          p.slot = at
+          p.pending = { slot = at, ii = ii }
+        end
+      elseif from == "morurun-slots" and to == "morurun-pick-list" and index then
+        local source = rows[index]
+        if source and not source.disabled and not source.open then
+          p.slot = index
+          p.pending = { slot = index }
         end
       end
-    end)
+    end
+    footer(p, slot, row, empty, filled)
+    -- The page's close is under the panels: the vault panel's own mark is where it is, so the
+    -- game's close piece is drawn again over it.
+    ui.draw(ui.themes.hub.close.normal, 1024 - 6 - 24, 2)
+  end)
   if not open then page = nil end
 end
 
@@ -321,7 +418,6 @@ rq.on_frame(function()
       local ok, err = pcall(change, p.iic, job.slot, job.ii)
       busy = false
       if not ok then rq.log(MOD .. ": " .. tostring(err)) end
-      p.picking = false
     end
   end
 end)

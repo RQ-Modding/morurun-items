@@ -7,12 +7,16 @@ without playing Alice's Mansion and without resetting the character.
 
 - A **MORU RUN** button on the status page, left of the X. It is greyed when the character has
   absorbed nothing, and during a quest. Hold the mouse over it to see what the character absorbed.
-- The button opens **Morurun Items**: the character's five absorbed slots, with each item's stats.
-  - **REMOVE** takes the item out of the character.
-  - **SWAP** shows the special items in the vault, and the one the character wears; pick one to
-    put it in the slot. The item you pick is used up, as the Morurun uses it up. Locked items are
-    greyed, and so is a worn item the game will not take off (Athena's). Items the Morurun never
-    absorbs (Forbidden Talent and its kind) are not shown.
+- The button opens **Morurun Items**, laid out as the game's storage screen: the character's five
+  absorbed slots on the left, with each item's stats, and the special items in the vault on the
+  right, with the vault's rank buttons, Locked / Unlocked, the count and SORT. A bar under the
+  slots holds the buttons.
+  - **SWAP**: click an item on the right to mark it, pick a slot on the left, and press SWAP. A
+    double click on an item, or dragging it onto a slot, does the same. The item you put in is used
+    up, as the Morurun uses it up. The special item the character wears is listed first; a worn
+    item the game will not take off (Athena's) is greyed. A locked item stays locked: unlock it in
+    the vault first. Items the Morurun never absorbs (Forbidden Talent and its kind) are not shown.
+  - **REMOVE**, or dragging a slot onto the vault's list, takes the item out of the character.
   - **ABSORB**, with the setting below on: an empty slot that a Morurun opened takes a special item
     the same way.
 - All of them ask first, with the game's Yes/No.
@@ -37,6 +41,7 @@ open.
 - Both settings hold for every save profile.
 - The button and the page work with the mouse. The arrow keys reach the button (Up from the Special
   slot, then Enter), and the page takes the arrow keys and Enter.
+- Right click, Esc or the X closes the page.
 
 ## Saves
 
@@ -49,7 +54,7 @@ Tested with every mod in the workspace installed. It touches no other mod's data
 
 ## Install
 
-Needs [RQ MOD](https://github.com/RQ-Modding/RQ-Mod) with loader **2.35.0** or newer. Extract the
+Needs [RQ MOD](https://github.com/RQ-Modding/RQ-Mod) with loader **2.44.0** or newer. Extract the
 release zip into the game's `mods` folder, so that you have `mods/morurun-items/mod.json`.
 
 ## License
