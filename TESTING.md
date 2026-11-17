@@ -18,6 +18,10 @@ The button is one of the status page's own (`rq.gamebutton`'s `"status"` group, 
 | `row-morurun-pick-list-N` | The right list (x 538), from its second row (the rank buttons sit over the first) | The worn special item first, then the vault's special items (`rq.uikit.item_picker`). A click marks one; a double click, or dragging it onto a slot, puts it in that slot. A worn one that cannot be removed is `enabled` false; a locked one shows LOCKED, and putting it in gives the game's notice "... is locked" |
 | `tab-morurun-pick-sort-default-so` | Bottom right | The vault's SORT (the kit cuts the key at 28 characters); the filter column over it keeps Special picked, with the vault's rank buttons and Locked / Unlocked |
 
+With more than two mods' buttons on the status page (loader 2.59.0 and later), the buttons are
+one **MODS** button (`status-mods`) over both cells, and this button is a row of the list it opens:
+press `status-mods`, then `button-morurun-items-open` (`rq.gamebutton.groups()` says which).
+
 - **The game's question.** SWAP / ABSORB, REMOVE, a double click on a right row, and a drop (an
   item onto a slot, or a slot onto the right list, which is REMOVE) ask with the game's Yes/No: the
   screen becomes `select`, with `yes` and `no`, and `select.message` holds the question. The page
