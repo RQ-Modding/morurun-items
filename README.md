@@ -3,6 +3,21 @@
 Change the special items the Morurun absorbed into a character, from the character's status page,
 without playing Alice's Mansion and without resetting the character.
 
+## Showcase
+
+### Morurun icon at Status
+
+<img width="737" height="441" alt="image" src="https://github.com/user-attachments/assets/08a30f00-a2de-4b13-825a-dd34f476f1ab" />
+
+### Morurun Editor
+
+<img width="1266" height="955" alt="image" src="https://github.com/user-attachments/assets/ad0353a6-90ce-4842-8a60-29f628f16c44" />
+
+### Mod Options
+
+<img width="1267" height="907" alt="image" src="https://github.com/user-attachments/assets/6d0355e9-9939-4474-9ae5-c1b32772c396" />
+
+
 ## What it changes
 
 - A **MORU RUN** button on the status page, left of the X. It is greyed when the character has
