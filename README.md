@@ -50,7 +50,7 @@ removed. The settings are in `rqmod-global.json`, which the game ignores.
 
 ## Works with
 
-Tested with every mod in the workspace installed. It touches no other mod's data.
+Tested with every RQ Modding mod installed. It touches no other mod's data.
 
 ## Install
 

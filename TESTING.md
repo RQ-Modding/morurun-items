@@ -73,9 +73,9 @@ press `status-mods`, then `button-morurun-items-open` (`rq.gamebutton.groups()` 
 - `scrollStatus(ステータス_キャラ一覧_インデクス(iic))` through `rq.ain.call` shows a character on an
   open status page; `rq.statuspage.chara()` says which one shows.
 
-## Test Lab
+## Tested in the game
 
-`test-lab/scenarios/morurun-items.lua`: the button on both kinds of character, its place and tip,
+The Test Lab's scenario `morurun-items`: the button on both kinds of character, its place and tip,
 the page's rows, REMOVE with No and Yes, SWAP with a vault item and with the worn one, the picker's
 rules (no Forbidden Talent, locked greyed), the card after each change, and the setting unchecked.
 Since 1.3.0 also: ABSORB into an open slot (No, then Yes), the slots no Morurun opened, a

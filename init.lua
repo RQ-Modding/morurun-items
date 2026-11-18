@@ -5,14 +5,14 @@
 -- API reference: https://rq-modding.github.io/rq-modding-docs/reference/
 --
 -- The game keeps the absorbed items in five slots, Ｃ[iic].ＦＡ[17] to ＦＡ[21], as item numbers;
--- Ｃ体内特殊アイテムの効果計算 adds their stats on every recalculation (notes/plans/plan-morurun-items.md
--- in the workspace). The button is one of the status page's own (rq.gamebutton "status"), and the
+-- Ｃ体内特殊アイテムの効果計算 adds their stats on every recalculation. The button
+-- is one of the status page's own (rq.gamebutton "status"), and the
 -- page is read and drawn again with rq.statuspage (loader 2.20.0). The slots are read and written
 -- with rq.chara.absorbed and set_absorbed (loader 2.23.0).
 --
 -- Each Morurun (Ｃレベルドレイン) adds one to the character's count (rebirths) and absorbs the worn
 -- special item into the first empty slot, so a character has opened one slot per Morurun, five at
--- most. Athena 2.0 never levels, so she never has one (notes/plans/plan-morurun-camera.md 2.4).
+-- most. Athena 2.0 never levels, so she never has one.
 --
 -- 1.4.0 (loader 2.44.0): the page is laid out as the game's storage screen: the slots on the left
 -- on the storage's panel (CG 11403), the vault's special items on the right on the vault's panel
